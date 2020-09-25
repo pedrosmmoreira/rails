@@ -58,7 +58,7 @@ module ActiveModel
 
     def self.generate_message(attribute, type, base, options) # :nodoc:
       type = options.delete(:message) if options[:message].is_a?(Symbol)
-      value = (attribute != :base ? base.send(:read_attribute_for_validation, attribute) : nil)
+      value = (attribute != :base ? base.read_attribute_for_validation(attribute) : nil)
 
       options = {
         model: base.model_name.human,
@@ -135,14 +135,15 @@ module ActiveModel
       end
     end
 
-    # Returns the error detail.
+    # Returns the error details.
     #
     #   error = ActiveModel::Error.new(person, :name, :too_short, count: 5)
-    #   error.detail
+    #   error.details
     #   # => { error: :too_short, count: 5 }
-    def detail
+    def details
       { error: raw_type }.merge(options.except(*CALLBACKS_OPTIONS + MESSAGE_OPTIONS))
     end
+    alias_method :detail, :details
 
     # Returns the full error message.
     #

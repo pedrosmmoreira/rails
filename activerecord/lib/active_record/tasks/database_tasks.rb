@@ -407,21 +407,21 @@ module ActiveRecord
         end
       end
 
-      def dump_filename(name, format = ActiveRecord::Base.schema_format)
-        filename = if name == "primary"
+      def dump_filename(db_config_name, format = ActiveRecord::Base.schema_format)
+        filename = if ActiveRecord::Base.configurations.primary?(db_config_name)
           schema_file_type(format)
         else
-          "#{name}_#{schema_file_type(format)}"
+          "#{db_config_name}_#{schema_file_type(format)}"
         end
 
         ENV["SCHEMA"] || File.join(ActiveRecord::Tasks::DatabaseTasks.db_dir, filename)
       end
 
-      def cache_dump_filename(name, schema_cache_path: nil)
-        filename = if name == "primary"
+      def cache_dump_filename(db_config_name, schema_cache_path: nil)
+        filename = if ActiveRecord::Base.configurations.primary?(db_config_name)
           "schema_cache.yml"
         else
-          "#{name}_schema_cache.yml"
+          "#{db_config_name}_schema_cache.yml"
         end
 
         schema_cache_path || ENV["SCHEMA_CACHE"] || File.join(ActiveRecord::Tasks::DatabaseTasks.db_dir, filename)
@@ -494,7 +494,7 @@ module ActiveRecord
 
         def each_current_configuration(environment, name = nil)
           environments = [environment]
-          environments << "test" if environment == "development" && !ENV["DATABASE_URL"]
+          environments << "test" if environment == "development" && !ENV["SKIP_TEST_DATABASE"] && !ENV["DATABASE_URL"]
 
           environments.each do |env|
             ActiveRecord::Base.configurations.configs_for(env_name: env).each do |db_config|

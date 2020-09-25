@@ -6,19 +6,6 @@ require "monitor"
 require "weakref"
 
 module ActiveRecord
-  # Raised when a connection could not be obtained within the connection
-  # acquisition timeout period: because max connections in pool
-  # are in use.
-  class ConnectionTimeoutError < ConnectionNotEstablished
-  end
-
-  # Raised when a pool was unable to get ahold of all its connections
-  # to perform a "group" action such as
-  # {ActiveRecord::Base.connection_pool.disconnect!}[rdoc-ref:ConnectionAdapters::ConnectionPool#disconnect!]
-  # or {ActiveRecord::Base.clear_reloadable_connections!}[rdoc-ref:ConnectionAdapters::ConnectionHandler#clear_reloadable_connections!].
-  class ExclusiveConnectionTimeoutError < ConnectionTimeoutError
-  end
-
   module ConnectionAdapters
     module AbstractPool # :nodoc:
       def get_schema_cache(connection)
@@ -1015,6 +1002,12 @@ module ActiveRecord
       # In some cases you may want to prevent writes to the database
       # even if you are on a database that can write. `while_preventing_writes`
       # will prevent writes to the database for the duration of the block.
+      #
+      # This method does not provide the same protection as a readonly
+      # user and is meant to be a safeguard against accidental writes.
+      #
+      # See `READ_QUERY` for the queries that are blocked by this
+      # method.
       def while_preventing_writes(enabled = true)
         original, self.prevent_writes = self.prevent_writes, enabled
         yield

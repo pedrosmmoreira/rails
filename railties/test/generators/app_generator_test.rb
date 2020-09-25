@@ -5,6 +5,7 @@ require "rails/generators/rails/app/app_generator"
 require "generators/shared_generator_tests"
 
 DEFAULT_APP_FILES = %w(
+  .gitattributes
   .gitignore
   .ruby-version
   README.md
@@ -207,16 +208,7 @@ class AppGeneratorTest < Rails::Generators::TestCase
   def test_new_application_load_defaults
     app_root = File.join(destination_root, "myfirstapp")
     run_generator [app_root]
-
-    output = nil
-
     assert_file "#{app_root}/config/application.rb", /\s+config\.load_defaults #{Rails::VERSION::STRING.to_f}/
-
-    Dir.chdir(app_root) do
-      output = `SKIP_REQUIRE_WEBPACKER=true ./bin/rails r "puts Rails.application.config.assets.unknown_asset_fallback"`
-    end
-
-    assert_equal "false\n", output
   end
 
   def test_csp_initializer_include_connect_src_example
@@ -295,6 +287,17 @@ class AppGeneratorTest < Rails::Generators::TestCase
     end
   end
 
+  def test_adds_bin_yarn_into_setup_script
+    run_generator
+
+    assert_file "bin/yarn"
+
+    assert_file "bin/setup" do |content|
+      # Does not comment yarn install
+      assert_match(/(?=[^#]*?) system! 'bin\/yarn'/, content)
+    end
+  end
+
   def test_app_update_does_not_generate_yarn_contents_when_bin_yarn_is_not_used
     app_root = File.join(destination_root, "myapp")
     run_generator [app_root, "--skip-javascript"]
@@ -307,7 +310,7 @@ class AppGeneratorTest < Rails::Generators::TestCase
       assert_no_file "#{app_root}/bin/yarn"
 
       assert_file "#{app_root}/bin/setup" do |content|
-        assert_no_match(/system\('bin\/yarn'\)/, content)
+        assert_no_match(/system! 'bin\/yarn'/, content)
       end
     end
   end
@@ -904,6 +907,14 @@ class AppGeneratorTest < Rails::Generators::TestCase
     assert_no_gem "spring"
   end
 
+  def test_skip_active_record_option
+    run_generator [destination_root, "--skip-active-record"]
+
+    assert_file ".gitattributes" do |content|
+      assert_no_match(/schema.rb/, content)
+    end
+  end
+
   def test_skip_javascript_option
     command_check = -> command, *_ do
       if command == "webpacker:install"
@@ -920,6 +931,10 @@ class AppGeneratorTest < Rails::Generators::TestCase
     assert_no_gem "webpacker"
     assert_file "config/initializers/content_security_policy.rb" do |content|
       assert_no_match(/policy\.connect_src/, content)
+    end
+
+    assert_file ".gitattributes" do |content|
+      assert_no_match(/yarn\.lock/, content)
     end
   end
 

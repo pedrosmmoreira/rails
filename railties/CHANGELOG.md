@@ -1,3 +1,14 @@
+*   Deprecate `config.active_support.use_sha1_digests`
+
+    `config.active_support.use_sha1_digests` is deprecated. It is replaced with `config.active_support.hash_digest_class` which allows setting the desired Digest instead. The Rails version defaults have been updated to use this new method as well so the behavior there is unchanged.
+
+    *Dirkjan Bussink*
+
+*   Change the default logging level from :debug to :info to avoid inadvertent exposure of personally
+    identifiable information (PII) in production environments.
+
+    *Eric M. Payne*
+
 *   Automatically generate abstract class when using multiple databases.
 
     When generating a scaffold for a multiple database application, Rails will now automatically generate the abstract class for the database when the database argument is passed. This abstract class will include the connection information for the writing configuration and any models generated for that database will automatically inherit from the abstract class.

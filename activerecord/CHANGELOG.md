@@ -1,3 +1,59 @@
+*   Allow associations supporting the `dependent:` key to take `dependent: :destroy_async`.
+
+    ```ruby
+    class Account < ActiveRecord::Base
+        belongs_to :supplier, dependent: :destroy_async
+    end
+    ```
+
+    `:destroy_async` will enqueue a job to destroy associated records in the background.
+
+    *DHH*, *George Claghorn*, *Cory Gwin*, *Rafael Mendonça França*, *Adrianna Chang*
+
+*   Add `SKIP_TEST_DATABASE` environment variable to disable modifying the test database when `rails db:create` and `rails db:drop` are called.
+
+    *Jason Schweier*
+
+*   `connects_to` can only be called on `ActiveRecord::Base` or abstract classes.
+
+    Ensure that `connects_to` can only be called from `ActiveRecord::Base` or abstract classes. This protects the application from opening duplicate or too many connections.
+
+    *Eileen M. Uchitelle*, *John Crepezzi*
+
+*   All connection adapters `execute` now raises `ActiveRecord::ConnectionNotEstablished` rather than
+    `ActiveRecord::StatementInvalid` when they encounter a connection error.
+
+    *Jean Boussier*
+
+*   `Mysql2Adapter#quote_string` now raises `ActiveRecord::ConnectionNotEstablished` rather than
+    `ActiveRecord::StatementInvalid` when it can't connect to the MySQL server.
+
+    *Jean Boussier*
+
+*   Add support for check constraints that are `NOT VALID` via `validate: false` (PostgreSQL-only).
+
+    *Alex Robbin*
+
+*   Ensure the default configuration is considered primary or first for an environment
+
+    If a multiple database application provides a configuration named primary, that will be treated as default. In applications that do not have a primary entry, the default database configuration will be the first configuration for an environment.
+
+    *Eileen M. Uchitelle*
+
+*   Allow `where` references association names as joined table name aliases.
+
+    ```ruby
+    class Comment < ActiveRecord::Base
+      enum label: [:default, :child]
+      has_many :children, class_name: "Comment", foreign_key: :parent_id
+    end
+
+    # ... FROM comments LEFT OUTER JOIN comments children ON ... WHERE children.label = 1
+    Comment.includes(:children).where("children.label": "child")
+    ```
+
+    *Ryuta Kamizono*
+
 *   Support storing demodulized class name for polymorphic type.
 
     Before Rails 6.1, storing demodulized class name is supported only for STI type

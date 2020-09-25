@@ -85,7 +85,7 @@ module ApplicationTests
         end
       end
 
-      def db_migrate_and_schema_dump_and_load(schema_format)
+      def db_migrate_and_schema_dump_and_load(schema_format = "ruby")
         add_to_config "config.active_record.schema_format = :#{schema_format}"
         require "#{app_path}/config/environment"
 
@@ -428,7 +428,7 @@ module ApplicationTests
       end
 
       test "db:migrate and db:schema:dump and db:schema:load works on all databases" do
-        db_migrate_and_schema_dump_and_load "ruby"
+        db_migrate_and_schema_dump_and_load
       end
 
       test "db:migrate and db:schema:dump and db:schema:load works on all databases with sql option" do
@@ -692,7 +692,7 @@ module ApplicationTests
         ENV.delete "RAILS_ENV"
         ENV.delete "RACK_ENV"
 
-        db_migrate_and_schema_dump_and_load "ruby"
+        db_migrate_and_schema_dump_and_load
 
         app_file "db/seeds.rb", <<-RUBY
           print Book.connection.pool.db_config.database
@@ -811,6 +811,21 @@ module ApplicationTests
         RUBY
 
         db_create_and_drop_namespace("primary", "db/development.sqlite3")
+      end
+
+      test "a thing" do
+        app_file "config/database.yml", <<-YAML
+          development:
+            default:
+              database: db/default.sqlite3
+              adapter: sqlite3
+            animals:
+              database: db/develoment_animals.sqlite3
+              adapter: sqlite3
+              migrations_paths: db/animals_migrate
+        YAML
+
+        db_migrate_and_schema_dump_and_load
       end
     end
   end
